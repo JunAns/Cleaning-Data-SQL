@@ -1,0 +1,140 @@
+SELECT * FROM layoffs;
+CREATE TABLE stagging_layoffs LIKE layoffs;
+
+SELECT * FROM staggstagging2_layoffsing_layoffs;
+INSERT stagging_layoffs SELECT * FROM layoffs;
+
+SELECT * FROM stagging_layoffs;
+SELECT *, ROW_NUMBER() OVER(PARTITION BY company, industry, total_laid_off, percentage_laid_off,`date`) AS row_num FROM stagging_layoffs;
+WITH duplicate_cte AS (
+SELECT *, ROW_NUMBER() OVER(
+PARTITION BY company, industry, total_laid_off, percentage_laid_off,`date`,stage,country,funds_raised_millions) AS row_num FROM stagging_layoffs
+)
+SELECT * FROM duplicate_cte WHERE ROW_NUM > 1;
+
+SELECT * FROM stagging_layoffs where company ='Casper';
+
+WITH duplicate_cte AS (
+SELECT *, ROW_NUMBER() OVER(
+PARTITION BY company, industry, total_laid_off, percentage_laid_off,`date`,stage,country,funds_raised_millions) AS row_num FROM stagging_layoffs
+);
+DELETE FROM duplicate_cte WHERE row_num > 1;
+
+CREATE TABLE `stagging2_layoffs` (
+  `company` text DEFAULT NULL,
+  `location` text DEFAULT NULL,
+  `industry` text DEFAULT NULL,
+  `total_laid_off` int(11) DEFAULT NULL,
+  `percentage_laid_off` text DEFAULT NULL,
+  `date` text DEFAULT NULL,
+  `stage` text DEFAULT NULL,
+  `country` text DEFAULT NULL,
+  `funds_raised_millions` int(11) DEFAULT NULL,
+  `row_num` INT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+select * from stagging2_layoffs;
+insert into stagging2_layoffs
+SELECT *, ROW_NUMBER() OVER(
+PARTITION BY company, industry, total_laid_off, percentage_laid_off,`date`,stage,country,funds_raised_millions) AS row_num FROM stagging_layoffs;
+
+select * from stagging2_layoffs where row_num > 1;
+-- where row_num > 1;
+
+delete from stagging2_layoffs where row_num > 1;
+select * from stagging2_layoffs;
+
+-- sTANDARDIZATION dATA
+
+select company, trim(company) from stagging2_layoffs;
+
+update stagging2_layoffs set company = trim(company);
+
+select * from stagging2_layoffs where industry like 'Crypto%';
+select distinct industry from stagging2_layoffs; -- where industry like 'Crypto%'
+update stagging2_layoffs set industry = 'Crypto' where industry like 'Crypto%';
+
+select distinct location from stagging2_layoffs order by 1;
+
+select distinct country from stagging2_layoffs order by 1;
+
+select * from stagging2_layoffs where country like 'United States' order by 1;
+
+select distinct country, trim(trailing '.' from country) from stagging2_layoffs order by 1;
+UPDATE stagging2_layoffs SET country = TRIM(TRAILING '.' FROM country) WHERE country LIKE 'United States%';
+
+select `date`, str_to_date(`date`,'%m/%d/%Y') from stagging2_layoffs;
+
+select distinct `date` from stagging2_layoffs limit 10;
+select * from stagging2_layoffs;
+
+insert into stagging2_layoffs select * from stagging_layoffs;
+
+drop table stagging2_layoffs;
+CREATE TABLE temp_dates (
+  id INT,
+  date text
+);
+insert into temp_dates (`date`) select `date` from stagging_layoffs;
+select * from temp_dates;
+insert into stagging2_layoffs (`date`) select `date` from temp_dates;
+SELECT COUNT(*) FROM temp_dates WHERE date IS NOT NULL;
+SELECT *, 
+       ROW_NUMBER() OVER (
+           PARTITION BY company, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions
+           ORDER BY company
+       ) AS row_num 
+FROM stagging_layoffs;
+drop table stagging2_layoffs;
+INSERT INTO stagging2_layoffs SELECT *, ROW_NUMBER() OVER (
+PARTITION BY company, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions
+) AS row_num  FROM stagging_layoffs;
+
+UPDATE stagging2_layoffs
+SET `date` = STR_TO_DATE(`date`, '%Y-%m-%d');
+
+ALTER TABLE stagging2_layoffs ADD COLUMN date_temp DATE;
+UPDATE stagging2_layoffs
+SET date_temp = STR_TO_DATE(`date`, '%Y-%m-%d');
+alter table stagging2_layoffs drop column `date`;
+alter table stagging2_layoffs change column `date_temp` `date` date;
+-- shift column`date` before `stage`
+alter table stagging2_layoffs modify column `date` date after percentage_laid_off;
+
+-- choose column total_laid_off that is null
+select * from stagging2_layoffs
+where total_laid_off is null
+and percentage_laid_off is null;
+-- find null and percentage_laid_off tha null to using and
+
+select * from stagging2_layoffs -- check missing values
+where industry is null
+or industry ='';
+
+select * from stagging2_layoffs where company = 'Airbnb';
+
+select * from stagging2_layoffs where company like 'Bally%';
+
+select t1.industry, t2.industry 
+from stagging2_layoffs t1 
+join stagging2_layoffs t2 
+on t1.company = t2.company 
+where (t1.industry is null or t1.industry = '') 
+and t2.industry is not null;
+
+update stagging2_layoffs set industry = null where industry = '';
+
+update stagging2_layoffs t1
+join stagging2_layoffs t2
+on t1.company = t2.company
+set t1.industry = t2.industry
+where t1.industry is null 
+and t2.industry is not null;
+
+select * from stagging2_layoffs;
+ 
+select * from stagging2_layoffs where total_laid_off is null and percentage_laid_off is null;
+
+delete from stagging2_layoffs where total_laid_offis is null and percentage_laid_off is null;
+
+alter table stagging2_layoffs drop column row_num;
